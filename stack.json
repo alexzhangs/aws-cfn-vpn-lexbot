@@ -1,0 +1,215 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "AWS CloudFormation Template to setup AWS Lex Bot services.",
+  "Resources": {
+    "LambdaLexBotInstallerExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {"Service": ["lambda.amazonaws.com"]},
+              "Action": ["sts:AssumeRole"]
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          "arn:aws:iam::aws:policy/AmazonLexFullAccess",
+          "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
+          "arn:aws:iam::aws:policy/IAMFullAccess"
+        ],
+        "Path": "/"
+      }
+    },
+    "LambdaLexBotInstaller": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Description": "Install/Uninstall Lex Bot on stack creation/deletion.",
+        "Code": { "ZipFile": { "Fn::Join": [ "\n", [
+          "_M=False",
+          "_L='1.0'",
+          "_K='LambdaArn'",
+          "_J='messageVersion'",
+          "_I='uri'",
+          "_H='The value of tag with key=`Name` on the instance.'",
+          "_G='maxAttempts'",
+          "_F=True",
+          "_E='messages'",
+          "_D='PlainText'",
+          "_C='groupNumber'",
+          "_B='content'",
+          "_A='contentType'",
+          "import os,json,boto3",
+          "import cfnresponse",
+          "print('Loading function')",
+          "slot_type_name='VpnInstanceNames'",
+          "slot_type=dict(name=slot_type_name,description=_H,createVersion=_F,enumerationValues=[dict(value=A)for A in['foo','bar']],valueSelectionStrategy='ORIGINAL_VALUE')",
+          "intent_name='GetNewIpForVpnInstance'",
+          "intent=dict(name=intent_name,description='Assign a new IP for a specific VPN instance.',createVersion=_F,slots=[{'name':'VpnInstanceName','description':_H,'slotConstraint':'Required','slotType':slot_type_name,'valueElicitationPrompt':{_E:[{_A:_D,_B:'Please specify an instance name.',_C:1},{_A:_D,_B:'Which instance?',_C:1}],_G:3},'priority':1,'sampleUtterances':[],'obfuscationSetting':'NONE'}],sampleUtterances=['Get a new IP for instance {VpnInstanceName}','Assign a new IP for instance {VpnInstanceName}','Change the IP of instance {VpnInstanceName}'],confirmationPrompt={_E:[{_A:_D,_B:'The IP address of this instance will be replaced with a new one, are you sure?',_C:1}],_G:3},rejectionStatement={_E:[{_A:_D,_B:'The IP address of this instance will remain untouched.',_C:1}]},dialogCodeHook={_I:os.getenv(_K),_J:_L},fulfillmentActivity={'type':'CodeHook','codeHook':{_I:os.getenv(_K),_J:_L}},parentIntentSignature='')",
+          "bot_name='VpnBot'",
+          "bot=dict(name=bot_name,description='A Lex robot to interact with VPN service.',createVersion=_F,intents=[{'intentName':intent_name}],clarificationPrompt={_E:[{_A:_D,_B:'What can I do for you?',_C:1},{_A:_D,_B:'How can I help you?',_C:1},{_A:_D,_B:'I can help only if you tell me the magic words.',_C:1}],_G:3},abortStatement={_E:[{_A:_D,_B:'Sorry, I could not understand. Goodbye.',_C:1}]},idleSessionTTLInSeconds=300,voiceId='Salli',processBehavior='BUILD',locale='en-US',childDirected=_M,detectSentiment=_M)",
+          "lex=boto3.client('lex-models',region_name=os.getenv('Region'))",
+          "def lambda_handler(event,context):",
+          "    H='version';G='$LATEST';E=context;C=event;B='checksum'",
+          "    try:",
+          "        print('Received event: '+json.dumps(C));D=C['RequestType'];print('request type: {}'.format(D))",
+          "        if D=='Create':",
+          "            try:",
+          "                A=lex.get_slot_type(name=slot_type_name,version=G)",
+          "                if A:slot_type[B]=A[B]",
+          "            except lex.exceptions.NotFoundException:pass",
+          "            A=lex.put_slot_type(**slot_type);intent['slots'][0]['slotTypeVersion']=A[H]",
+          "            try:",
+          "                A=lex.get_intent(name=intent_name,version=G)",
+          "                if A:intent[B]=A[B]",
+          "            except lex.exceptions.NotFoundException:pass",
+          "            A=lex.put_intent(**intent);bot['intents'][0]['intentVersion']=A[H]",
+          "            try:",
+          "                A=lex.get_bot(name=bot_name,versionOrAlias=G)",
+          "                if A:bot[B]=A[B]",
+          "            except lex.exceptions.NotFoundException:pass",
+          "            A=lex.put_bot(**bot);print(A)",
+          "        elif D=='Delete':",
+          "            try:lex.delete_bot(name=bot_name);lex.delete_intent(name=intent_name);lex.delete_slot_type(name=slot_type_name)",
+          "            except lex.exceptions.NotFoundException:pass",
+          "        elif D=='Update':0",
+          "        cfnresponse.send(C,E,cfnresponse.SUCCESS,{})",
+          "    except Exception as F:print(F);cfnresponse.send(C,E,cfnresponse.FAILED,{'error':str(F)})"
+        ] ] } },
+        "Environment": {
+          "Variables": {
+            "Region": {"Fn::If": [
+              "SeparateRegion",
+              {"Ref": "Region"},
+              {"Ref": "AWS::Region"}
+            ]},
+            "LambdaArn": {"Fn::If": [
+              "SeparateRegion",
+              {"Fn::GetAtt": ["CrossRegionRouterInstaller", "LambdaArn"]},
+              {"Ref": "LambdaArn"}
+            ]}
+          }
+        },
+        "Handler": "index.lambda_handler",
+        "Runtime": "python3.7",
+        "Timeout": "30",
+        "Role": {"Fn::GetAtt": ["LambdaLexBotInstallerExecutionRole", "Arn"]}
+      }
+    },
+    "LexBotInstaller": {
+      "Type": "AWS::CloudFormation::CustomResource",
+      "Properties": {
+        "ServiceToken": {"Fn::GetAtt": ["LambdaLexBotInstaller", "Arn"]}
+      }
+    },
+    "LambdaCrossRegionRouterInstallerExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Condition": "SeparateRegion",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {"Service": ["lambda.amazonaws.com"]},
+              "Action": ["sts:AssumeRole"]
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
+          "arn:aws:iam::aws:policy/IAMFullAccess"
+        ],
+        "Path": "/"
+      }
+    },
+    "LambdaCrossRegionRouterInstaller": {
+      "Type": "AWS::Lambda::Function",
+      "Condition": "SeparateRegion",
+      "Properties": {
+        "Description": "Install/Uninstall Lambda cross region router function on stack creation/deletion.",
+        "Code": { "ZipFile": { "Fn::Join": [ "\n", [
+          "_H='lambda:InvokeFunction'",
+          "_G='Allow'",
+          "_F='Action'",
+          "_E='Effect'",
+          "_D='2012-10-17'",
+          "_C='Statement'",
+          "_B='Version'",
+          "_A='Region'",
+          "import os,io,time,zipfile,json,boto3",
+          "import cfnresponse",
+          "print('Loading function')",
+          "iam_client=boto3.client('iam',region_name=os.getenv(_A))",
+          "lambda_client=boto3.client('lambda',region_name=os.getenv(_A))",
+          "AssumeRolePolicyDocument={_B:_D,_C:{_E:_G,'Principal':{'Service':['lambda.amazonaws.com']},_F:['sts:AssumeRole']}}",
+          "InvokeLambdaInlinePolicyDocument={_B:_D,_C:[{_E:_G,_F:[_H],'Resource':'*'}]}",
+          "code=['import os, json, boto3','','print(\"Loading function\")','','def lambda_handler(event, context):','    print(\"Received event: \" + json.dumps(event))','','    client = boto3.client(\"lambda\", region_name=os.getenv(\"RoutingLambdaRegion\"))','    response = client.invoke(','        FunctionName=os.getenv(\"RoutingLambdaArn\"),','        Payload=json.dumps(event)','    )','    print(response)','    routed_response = json.loads(response[\"Payload\"].read())','    return routed_response']",
+          "def prefix(prefix,conjunction,fixed,max_len):",
+          "    B=conjunction;A=fixed;C=max_len-len(B)-len(A)",
+          "    if C>0:return prefix[0:C]+B+A",
+          "    else:return A",
+          "def lambda_handler(event,context):",
+          "    S='RoutingLambdaRegion';R='LambdaInvokeLambda';Q='arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole';P='-';N='RoutingLambdaArn';H=context;C=event",
+          "    try:",
+          "        print('Received event: '+json.dumps(C));D=C['RequestType'];print('request type: {}'.format(D));I=C['StackId'].split('/')[1];E='LambdaCrossRegionRouter';F=prefix(I,P,E,64);B=prefix(I,P,E+'ExecutionRole',64)",
+          "        if D=='Create':",
+          "            try:print('creating the IAM role');G=iam_client.create_role(RoleName=B,AssumeRolePolicyDocument=json.dumps(AssumeRolePolicyDocument));print(G);print('attaching the policy to the IAM role');A=iam_client.attach_role_policy(RoleName=B,PolicyArn=Q);print(A);print('creating the inline policy to the IAM role');A=iam_client.put_role_policy(RoleName=B,PolicyName=R,PolicyDocument=json.dumps(InvokeLambdaInlinePolicyDocument));print(A);print('wait for a while, let the role be effective');time.sleep(10)",
+          "            except iam_client.exceptions.EntityAlreadyExistsException:G=iam_client.get_role(RoleName=B)",
+          "            print('generating the zip file in memory for the Lambda function');J=io.BytesIO();K=zipfile.ZipFile(J,mode='w',compression=zipfile.ZIP_DEFLATED);L=zipfile.ZipInfo('index.py');L.external_attr=493<<16;K.writestr(L,'\\n'.join(code));K.close();print('creating the Lambda function');A=lambda_client.create_function(FunctionName=F,Runtime='python3.7',Role=G['Role']['Arn'],Handler='index.lambda_handler',Code={'ZipFile':J.getvalue()},Description='A Lambda Function to route the cross-region call for the Lex Bot.',Timeout=15,Environment={'Variables':{S:os.getenv(S),N:os.getenv(N)}});O=A['FunctionArn'];print(A);print('adding permission to the Lambda function');A=lambda_client.add_permission(FunctionName=F,StatementId=E+'InvokePermission-2',Action=_H,Principal='lex.amazonaws.com',SourceArn='arn:aws:lex:{region}:{account}:intent:*'.format(region=os.getenv(_A),account=os.getenv(N).split(':')[4]));print(A)",
+          "        elif D=='Delete':",
+          "            try:print('detaching the policy from the IAM role');A=iam_client.detach_role_policy(RoleName=B,PolicyArn=Q);print(A);print('deleting the inline policy from the IAM role');A=iam_client.delete_role_policy(RoleName=B,PolicyName=R);print(A);print('deleting the IAM role');A=iam_client.delete_role(RoleName=B);print(A)",
+          "            except iam_client.exceptions.NoSuchEntityException:pass",
+          "            try:print('deleting the Lambda function');A=lambda_client.delete_function(FunctionName=F);print(A)",
+          "            except lambda_client.exceptions.ResourceNotFoundException:pass",
+          "        elif D=='Update':0",
+          "        cfnresponse.send(C,H,cfnresponse.SUCCESS,{'LambdaArn':O})",
+          "    except Exception as M:print(M);cfnresponse.send(C,H,cfnresponse.FAILED,{'error':str(M)})"
+        ] ] } },
+        "Environment": {
+          "Variables": {
+            "Region": {"Ref": "Region"},
+            "RoutingLambdaRegion": {"Ref": "AWS::Region"},
+            "RoutingLambdaArn": {"Ref": "LambdaArn"}
+          }
+        },
+        "Handler": "index.lambda_handler",
+        "Runtime": "python3.7",
+        "Timeout": "30",
+        "Role": {"Fn::GetAtt": ["LambdaCrossRegionRouterInstallerExecutionRole", "Arn"]}
+      }
+    },
+    "CrossRegionRouterInstaller": {
+      "Type": "AWS::CloudFormation::CustomResource",
+      "Condition": "SeparateRegion",
+      "Properties": {
+        "ServiceToken": {"Fn::GetAtt": ["LambdaCrossRegionRouterInstaller", "Arn"]}
+      }
+    }
+  },
+  "Conditions": {
+    "SeparateRegion": {
+      "Fn::Not": [{
+        "Fn::Equals": [{"Ref": "AWS::Region"}, {"Ref": "Region"}]
+      }]
+    }
+  },
+  "Parameters": {
+    "Region": {
+      "Type": "String",
+      "Default": "",
+      "Description": "Region name to deploy the Lex Bot stack, leave blank to deploy the Lex Bot in the default region."
+    },
+    "LambdaArn": {
+      "Type": "String",
+      "Default": "",
+      "Description": "The Amazon Resource Name (ARN) of the Lambda that the Lex Bot uses."
+    }
+  },
+  "Outputs": {
+  }
+}
