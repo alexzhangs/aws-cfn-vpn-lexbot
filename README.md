@@ -15,3 +15,48 @@ About how to do this, you may refer to a real-world example
 
 For the input parameters and the detail of the template, please check the template
 file.
+
+## For Developers
+
+1. Use inline Lambda functions to avoid the dependency in config files:
+
+    1. Use the `pyminifier` to minimize the size of the Lambda code if
+    the code size is greater than 4KB.
+
+    1. Use `import cfnresponse` as the exact style, to let
+    CloudFormation injects `cfnresponse` package for you.
+
+## Troubleshooting
+
+1. The stack creation ends at `CREATE_FAILED` status and Lambda
+function LambdaCrossRegionRouterInstaller gives following log:
+
+    ```
+    An error occurred (InvalidParameterValueException) when calling
+    the CreateFunction operation: The role defined for the function
+    cannot be assumed by Lambda.
+    ```
+
+    It caused by the unavailable of the role. The role is created but
+    is not ready yet. A 10 seconds delay is set for this, but
+    sometimes it's not long enough.
+
+    Try to redeploy the stack again, it should go well.
+   
+1. The stack deletion ends at `DELETE_FAILED` status:  An error
+occurred (ConflictException) when calling the DeleteIntent operation:
+There is a conflicting operation in progress for the resource named
+'GetNewIpForVpnInstance'.
+   
+    The deletion of the Lex bot is not complete yet. A 10 seconds
+    delay is set for this, but sometimes it's not long enough.
+
+    Try to redeploy the stack again, it should go well.
+   
+1. The Lex bot response in the chat: `foo: the instance name you
+   specified does not exist, the valid instance names are: .`
+
+    The instance takes around 15 minutes to register to the
+    shadowsocks-manager after the stack creation is complete.
+
+    Try to chat with the Lex bot later.
