@@ -133,6 +133,12 @@ bot = dict(
     detectSentiment=False,
 )
 
+bot_alias_name = bot_name
+bot_alias = dict(
+    name=bot_name,
+    botName=bot_name
+)
+
 lex = boto3.client('lex-models', region_name=os.getenv('Region'))
 
 def lambda_handler(event, context):
@@ -142,6 +148,7 @@ def lambda_handler(event, context):
         print('request type: {}'.format(request_type))
 
         if request_type == 'Create':
+            print('creating the intent')
             try:
                 r = lex.get_intent(
                     name=intent_name,
@@ -151,6 +158,7 @@ def lambda_handler(event, context):
             r = lex.put_intent(**intent)
             bot['intents'][0]['intentVersion'] = r['version']
 
+            print('creating the bot')
             try:
                 r = lex.get_bot(
                     name=bot_name,
@@ -158,11 +166,28 @@ def lambda_handler(event, context):
                 if r: bot['checksum'] = r['checksum']
             except lex.exceptions.NotFoundException: pass
             r = lex.put_bot(**bot)
+            bot_alias['botVersion'] = r['version']
             print(r)
+
+            print('publishing the bot')
+            try:
+                r = lex.get_bot_alias(
+                    name=bot_alias_name,
+                    botName=bot_name)
+                if r: bot_alias['checksum'] = r['checksum']
+            except lex.exceptions.NotFoundException: pass
+            r = lex.put_bot_alias(**bot_alias)
+            print(r)
+
         elif request_type == 'Delete':
             try:
+                print('unpublishing the bot')
+                lex.delete_bot_alias(name=bot_alias_name, botName=bot_name)
+                time.sleep(10)
+                print('deleting the bot')
                 lex.delete_bot(name=bot_name)
                 time.sleep(10)
+                print('deleting the intent')
                 lex.delete_intent(name=intent_name)
             except lex.exceptions.NotFoundException: pass
         elif request_type == 'Update': pass
