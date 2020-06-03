@@ -9,19 +9,10 @@ Environment Variables:
              from the Lex Bot.
 '''
 
-import os, json, boto3
+import os, time, json, boto3
 import cfnresponse # DO NOT change this line, seems CloudFormation reads this to inject the `cfnresponse` package
 
 print('Loading function')
-
-slot_type_name = 'VpnInstanceNames'
-slot_type = dict(
-    name=slot_type_name,
-    description='The value of tag with key=`Name` on the instance.',
-    createVersion=True,
-    enumerationValues=[dict(value=item) for item in ['foo','bar']],
-    valueSelectionStrategy='ORIGINAL_VALUE',
-)
 
 intent_name = 'GetNewIpForVpnInstance'
 intent = dict(
@@ -33,7 +24,7 @@ intent = dict(
             'name': 'VpnInstanceName',
             'description': 'The value of tag with key=`Name` on the instance.',
             'slotConstraint': 'Required',
-            'slotType': slot_type_name,
+            'slotType': 'AMAZON.AlphaNumeric',
             'valueElicitationPrompt': {
                 'messages': [
                     {
@@ -55,9 +46,12 @@ intent = dict(
         },
     ],
     sampleUtterances=[
-        'Get a new IP for instance {VpnInstanceName}',
-        'Assign a new IP for instance {VpnInstanceName}',
-        'Change the IP of instance {VpnInstanceName}',
+        'Get a new IP',
+        'Get a new IP for {VpnInstanceName}',
+        'Assign a new IP',
+        'Assign a new IP for {VpnInstanceName}',
+        'Change the IP',
+        'Change the IP for {VpnInstanceName}',
     ],
     confirmationPrompt={
         'messages': [
@@ -149,15 +143,6 @@ def lambda_handler(event, context):
 
         if request_type == 'Create':
             try:
-                r = lex.get_slot_type(
-                    name=slot_type_name,
-                    version='$LATEST')
-                if r: slot_type['checksum'] = r['checksum']
-            except lex.exceptions.NotFoundException: pass
-            r = lex.put_slot_type(**slot_type)
-            intent['slots'][0]['slotTypeVersion'] = r['version']
-
-            try:
                 r = lex.get_intent(
                     name=intent_name,
                     version='$LATEST')
@@ -177,8 +162,8 @@ def lambda_handler(event, context):
         elif request_type == 'Delete':
             try:
                 lex.delete_bot(name=bot_name)
+                time.sleep(10)
                 lex.delete_intent(name=intent_name)
-                lex.delete_slot_type(name=slot_type_name)
             except lex.exceptions.NotFoundException: pass
         elif request_type == 'Update': pass
 
