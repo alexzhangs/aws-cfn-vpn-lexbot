@@ -147,7 +147,7 @@
           "def lambda_handler(event,context):",
           "    S='RoutingLambdaRegion';R='LambdaInvokeLambda';Q='arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole';P='-';N='RoutingLambdaArn';H=context;C=event",
           "    try:",
-          "        print('Received event: '+json.dumps(C));D=C['RequestType'];print('request type: {}'.format(D));I=C['StackId'].split('/')[1];E='LambdaCrossRegionRouter';F=prefix(I,P,E,64);B=prefix(I,P,E+'ExecutionRole',64)",
+          "        print('Received event: '+json.dumps(C));D=C['RequestType'];print('request type: {}'.format(D));I=C['StackId'].split('/')[1];E='LambdaCrossRegionRouter';F=prefix(I,P,E,64);B=prefix(I,P,E+'ExecutionRole',64);O=None",
           "        if D=='Create':",
           "            try:print('creating the IAM role');G=iam_client.create_role(RoleName=B,AssumeRolePolicyDocument=json.dumps(AssumeRolePolicyDocument));print(G);print('attaching the policy to the IAM role');A=iam_client.attach_role_policy(RoleName=B,PolicyArn=Q);print(A);print('creating the inline policy to the IAM role');A=iam_client.put_role_policy(RoleName=B,PolicyName=R,PolicyDocument=json.dumps(InvokeLambdaInlinePolicyDocument));print(A);print('wait for a while, let the role be effective');time.sleep(10)",
           "            except iam_client.exceptions.EntityAlreadyExistsException:G=iam_client.get_role(RoleName=B)",

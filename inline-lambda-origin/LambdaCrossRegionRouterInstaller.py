@@ -71,6 +71,7 @@ def lambda_handler(event, context):
         func_suffix = 'LambdaCrossRegionRouter'
         func_name = prefix(stack_name, '-', func_suffix, 64)
         role_name = prefix(stack_name, '-', func_suffix + 'ExecutionRole', 64)
+        lambda_arn = None
 
         if request_type == 'Create':
             try:
