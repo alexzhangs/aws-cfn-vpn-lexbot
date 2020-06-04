@@ -16,6 +16,21 @@ About how to do this, you may refer to a real-world example
 For the input parameters and the detail of the template, please check the template
 file.
 
+## Chat with the Bot
+
+### 1. by the Amazon Lex Web Console
+
+Visit the [Amazon Lex Web Console](https://console.aws.amazon.com/lex/),
+choose the region you created the bot, click the `Test Chatbot` button
+in your Bot page. The chatbot should be chat-ready.
+
+### 2. by the 3rd part application, such as Facebook
+
+Check this document out:
+[Deploying an Amazon Lex Bot on a Messaging Platform](https://docs.aws.amazon.com/lex/latest/dg/example1.html)
+
+The integration needs to be setup manually.
+
 ## For Developers
 
 1. Use inline Lambda functions to avoid the dependency in config files:
