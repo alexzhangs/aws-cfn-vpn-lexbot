@@ -18,6 +18,11 @@ file.
 
 ## Chat with the Bot
 
+Supported intents:
+
+1. Change node IP address
+    * Chat syntax: `Get a new IP[ for <nodename>]`
+
 ### 1. by the Amazon Lex Web Console
 
 Visit the [Amazon Lex Web Console](https://console.aws.amazon.com/lex/),
@@ -37,6 +42,12 @@ The integration needs to be setup manually.
 
     1. Use the `pyminifier` to minimize the size of the Lambda code if
     the code size is greater than 4KB.
+
+    ```
+    pip install pyminifier
+    pyminify LambdaLexBotInstaller.py > LambdaLexBotInstaller.py
+    pyminify LambdaCrossRegionRouterInstaller.py > LambdaCrossRegionRouterInstaller-pyminify.py
+    ```
 
     1. Use `import cfnresponse` as the exact style, to let
     CloudFormation injects `cfnresponse` package for you.
