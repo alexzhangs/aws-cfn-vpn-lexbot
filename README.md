@@ -1,6 +1,14 @@
 # aws-cfn-vpn-lexbot
 
-AWS CloudFormation Stack for Lex Chat Bot services.
+AWS CloudFormation Stack for Lex chatbot services.
+
+The bot can be in the different region from where this stack belongs
+to. Following chart shows the relationships between the resources.
+
+| CloudFormation Resources |  |Dynamic Resources(can be in different region) |
+| --- | --- | --- |
+| Lambda function1 (Installer) | `creates` → | Lex bot `calls` ↓ |
+| Lambda function2 (Installer) | `creates` → | Lambda function3 (Handler) |
 
 ## Usage
 
@@ -35,14 +43,6 @@ Check this document out:
 [Deploying an Amazon Lex Bot on a Messaging Platform](https://docs.aws.amazon.com/lex/latest/dg/example1.html)
 
 The integration needs to be setup manually.
-
-## How It Works?
-
-Following chart shows the control flow and the topology.
-
-| 3rd Part Apps | Manager Stack | Node Stacks |
-|---|---|---|
-| Facebook, Slack, ... -> text -> | -> Lex bot -> Lambda -> | -> SNS -> Lambda -> CloudFormation -> EIP |
 
 ## For Developers
 
