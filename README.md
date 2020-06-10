@@ -36,6 +36,14 @@ Check this document out:
 
 The integration needs to be setup manually.
 
+## How It Works?
+
+Following chart shows the control flow and the topology.
+
+| 3rd Part Apps | Manager Stack | Node Stacks |
+|---|---|---|
+| Facebook, Slack, ... -> text -> | -> Lex bot -> Lambda -> | -> SNS -> Lambda -> CloudFormation -> EIP |
+
 ## For Developers
 
 1. Use inline Lambda functions to avoid the dependency in config files:
