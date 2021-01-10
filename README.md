@@ -46,14 +46,22 @@ The integration needs to be setup manually.
 
 ## For Developers
 
-1. Use inline Lambda functions to avoid the dependency in config files:
+1. The Lambda functions used by this template have to be inline
+   Lambda functions to avoid the dependency of `xsh aws/cfn/deploy
+   config`, because this template is going to be used as a nested
+   template of
+   [aws-cfn-vpn](https://github.com/alexzhangs/aws-cfn-vpn). 
+   `aws-cfn-vpn` is able to be deployed with `xsh aws/cfn/deploy`
+   which doesn't support to read `config` for the nested templates.
+
+    Something you should know with the inline Lambda functions:
 
     1. Use the `pyminifier` to minimize the size of the Lambda code if
     the code size is greater than 4KB.
 
     ```
     pip install pyminifier
-    pyminify LambdaLexBotInstaller.py > LambdaLexBotInstaller.py
+    pyminify LambdaLexBotInstaller.py > LambdaLexBotInstaller-pyminify.py
     pyminify LambdaCrossRegionRouterInstaller.py > LambdaCrossRegionRouterInstaller-pyminify.py
     ```
 
