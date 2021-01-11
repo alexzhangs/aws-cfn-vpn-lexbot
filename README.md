@@ -102,3 +102,21 @@ There is a conflicting operation in progress for the resource named
     shadowsocks-manager after the stack creation is complete.
 
     Try to chat with the Lex bot later.
+
+1. The stack deletion ends at `DELETE_FAILED` status:  The following
+resource(s) failed to delete: [LexBotInstaller].
+   
+    Error log found in CloudWatch:
+
+    ```
+    request type: Delete
+    unpublishing the bot
+    An error occurred (ResourceInUseException) when calling the DeleteBotAlias operation:
+    ...
+    ```
+
+    This error may occur if you have manually configured the Lex Bots
+    Channels.
+
+    Solution: Delete the integration of channel, then delete the
+    BotAlias, Bot, and Intent. Delete the stack again.
