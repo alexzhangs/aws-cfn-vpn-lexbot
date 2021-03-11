@@ -28,11 +28,11 @@ AssumeRolePolicyDocument = {
 }
 
 InvokeLambdaInlinePolicyDocument = {
-    "Version": "2012-10-17",
-    "Statement": [{
-        "Effect": "Allow",
-        "Action": ["lambda:InvokeFunction"],
-        "Resource": "*"
+    'Version': '2012-10-17',
+    'Statement': [{
+        'Effect': 'Allow',
+        'Action': ['lambda:InvokeFunction'],
+        'Resource': '*'
     }]
 }
 
@@ -93,9 +93,6 @@ def lambda_handler(event, context):
                     PolicyName='LambdaInvokeLambda',
                     PolicyDocument=json.dumps(InvokeLambdaInlinePolicyDocument))
                 print(r)
-
-                print('wait for a while, let the role be effective')
-                time.sleep(10)
             except iam_client.exceptions.EntityAlreadyExistsException:
                 rr = iam_client.get_role(
                     RoleName=role_name)
@@ -113,25 +110,36 @@ def lambda_handler(event, context):
             zf.writestr(info, '\\n'.join(code))
             zf.close()
 
-            print('creating the Lambda function')
-            r = lambda_client.create_function(
-                FunctionName=func_name,
-                Runtime='python3.7',
-                Role=rr['Role']['Arn'],
-                Handler='index.lambda_handler',
-                Code={
-                    #'ZipFile': open('/tmp/index.zip', 'rb').read()
-                    'ZipFile': mem_zip.getvalue()
-                },
-                Description='A Lambda Function to route the cross-region call for the Lex Bot.',
-                Timeout=15,
-                Environment={
-                    'Variables': {
-                        'RoutingLambdaRegion': os.getenv('RoutingLambdaRegion'),
-                        'RoutingLambdaArn': os.getenv('RoutingLambdaArn')
-            }})
-            lambda_arn = r['FunctionArn']
-            print(r)
+            while True:
+                try:
+                    print('creating the Lambda function')
+                    r = lambda_client.create_function(
+                        FunctionName=func_name,
+                        Runtime='python3.7',
+                        Role=rr['Role']['Arn'],
+                        Handler='index.lambda_handler',
+                        Code={
+                            #'ZipFile': open('/tmp/index.zip', 'rb').read()
+                            'ZipFile': mem_zip.getvalue()
+                        },
+                        Description='A Lambda Function to route the cross-region call for the Lex Bot.',
+                        Timeout=15,
+                        Environment={
+                            'Variables': {
+                                'RoutingLambdaRegion': os.getenv('RoutingLambdaRegion'),
+                                'RoutingLambdaArn': os.getenv('RoutingLambdaArn')
+                    }})
+                    lambda_arn = r['FunctionArn']
+                    print(r)
+                    break
+                except lambda_client.exceptions.InvalidParameterValueException as e:
+                    if e.response['Error']['Message'].find(' role ') > 0:
+                        # Error: {'Message': u'The role defined for the function cannot be assumed by Lambda.',
+                        #         'Code': 'InvalidParameterValueException'}
+                        print('sleep for a while, let the role created in last step take effect.')
+                        time.sleep(5)
+                    else:
+                        raise(e)
 
             print('adding permission to the Lambda function')
             r = lambda_client.add_permission(
