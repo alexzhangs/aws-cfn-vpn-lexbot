@@ -18,7 +18,7 @@
         "ManagedPolicyArns": [
           "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           "arn:aws:iam::aws:policy/AmazonLexFullAccess",
-          "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
+          "arn:aws:iam::aws:policy/AWSLambda_FullAccess",
           "arn:aws:iam::aws:policy/IAMFullAccess"
         ],
         "Path": "/"
@@ -120,7 +120,7 @@
         },
         "ManagedPolicyArns": [
           "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-          "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
+          "arn:aws:iam::aws:policy/AWSLambda_FullAccess",
           "arn:aws:iam::aws:policy/IAMFullAccess"
         ],
         "Path": "/"
