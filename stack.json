@@ -93,7 +93,7 @@
           }
         },
         "Handler": "index.lambda_handler",
-        "Runtime": "python3.7",
+        "Runtime": "python3.12",
         "Timeout": "30",
         "Role": {"Fn::GetAtt": ["LambdaLexBotInstallerExecutionRole", "Arn"]}
       }
@@ -161,7 +161,7 @@
           "			except iam_client.exceptions.EntityAlreadyExistsException:H=iam_client.get_role(RoleName=B)",
           "			print('generating the zip file in memory for the Lambda function');L=io.BytesIO();M=zipfile.ZipFile(L,mode='w',compression=zipfile.ZIP_DEFLATED);N=zipfile.ZipInfo('index.py');N.external_attr=493<<16;M.writestr(N,'\\n'.join(code));M.close()",
           "			while True:",
-          "				try:print('creating the Lambda function');A=lambda_client.create_function(FunctionName=G,Runtime='python3.7',Role=H['Role']['Arn'],Handler='index.lambda_handler',Code={'ZipFile':L.getvalue()},Description='A Lambda Function to route the cross-region call for the Lex Bot.',Timeout=15,Environment={'Variables':{S:os.getenv(S),O:os.getenv(O)}});K=A['FunctionArn'];print(A);break",
+          "				try:print('creating the Lambda function');A=lambda_client.create_function(FunctionName=G,Runtime='python3.12',Role=H['Role']['Arn'],Handler='index.lambda_handler',Code={'ZipFile':L.getvalue()},Description='A Lambda Function to route the cross-region call for the Lex Bot.',Timeout=15,Environment={'Variables':{S:os.getenv(S),O:os.getenv(O)}});K=A['FunctionArn'];print(A);break",
           "				except lambda_client.exceptions.InvalidParameterValueException as D:",
           "					if D.response['Error']['Message'].find(' role ')>0:print('sleep for a while, let the role created in last step take effect.');time.sleep(5)",
           "					else:raise D",
@@ -183,7 +183,7 @@
           }
         },
         "Handler": "index.lambda_handler",
-        "Runtime": "python3.7",
+        "Runtime": "python3.12",
         "Timeout": "60",
         "Role": {"Fn::GetAtt": ["LambdaCrossRegionRouterInstallerExecutionRole", "Arn"]}
       }
