@@ -115,7 +115,7 @@ def lambda_handler(event, context):
                     print('creating the Lambda function')
                     r = lambda_client.create_function(
                         FunctionName=func_name,
-                        Runtime='python3.7',
+                        Runtime='python3.12',
                         Role=rr['Role']['Arn'],
                         Handler='index.lambda_handler',
                         Code={
